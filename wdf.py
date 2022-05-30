@@ -354,9 +354,6 @@ class Diode(root_wdf):
 class Diode_pair(Diode):
     def __init__(self,next,Is,Vt=25.85e-3,n_diodes=2):
         Diode.__init__(self,Is,Vt,n_diodes)
-        self.next = next
-        next.connect_to_parent(self)
-        self.set_diode_params(Is,Vt,n_diodes)
 
     def propagate_reflected_wave(self):
         try:
