@@ -240,7 +240,7 @@ class Resistive_voltage_source(base_wdf):
         self.Vs = self.calc_impedance()
 
     def set_resistance(self,new_R):
-        if self.Rval = new_R:
+        if self.Rval == new_R:
             return
         self.Rval = new_R
         self.impedance_change()
@@ -290,7 +290,7 @@ class Resistive_voltage_source(base_wdf):
         self.calc_impedance()
 
     def set_resistance(self,new_R):
-        if self.Rval = new_R:
+        if self.Rval == new_R:
             return
         self.Rval = new_R
         self.impedance_change()
