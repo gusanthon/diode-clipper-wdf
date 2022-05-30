@@ -282,7 +282,7 @@ class Ideal_current_source(root_wdf):
 
 ##########################################################################################################################################
 
-class Resistive_voltage_source(base_wdf):
+class Resistive_current_source(base_wdf):
     def __init__(self,Rval: float = None):
         base_wdf.__init__(self)
         self.Is = 0
