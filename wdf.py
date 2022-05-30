@@ -1,375 +1,365 @@
-import scipy
 import numpy as np
 
-##############################################
-#### BASE ONE PORT OBJECT 
-##############################################
-
-class WDFOnePort(object):
+class base_wdf():
     def __init__(self):
-        # Incident- and reflected wave variables.
         self.a, self.b = 0, 0
         self.parent = None
 
     def connect_to_parent(self,p):
-      self.parent = p
+        self.parent = p
 
-    def propagate_impedance_change(self):
-      self.calc_impedance()
-      if self.parent != None:
-        self.parent.propagate_impedance_change()
-              
+    def calc_impedance(self):
+        pass
+
+    def impedance_change(self):
+        self.calc_impedance()
+        if self.parent != None:
+            self.parent.impedance_change()
+
     def wave_to_voltage(self):
-        voltage = (self.a + self.b) / 2
-        return voltage
+        return (self.a + self.b) / 2.
 
-    def wave_to_current(self):
-        current = (1 / 2 * self.Rp) * (self.a + self.b)
-        return current
+    def propagate_reflected_wave(self):
+        pass
 
-    def __str__(self):
-      return 'wdf one port'
+    def accept_incident_wave(self,a):
+        self.a = a
 
-    def __repr__(self):
-      return self.__str__()
+class root_wdf(base_wdf):
+    def __init__(self):
+        base_wdf.__init__(self)
+        self.next = None
+
+    def connect_to_parent(self, p):
+        pass
+
+    def impedance_change(self):
+        self.calc_impedance()
+
+##########################################################################################################################################
+
+class Resistor(base_wdf):
+    def __init__(self,R=1e-9):
+        base_wdf.__init__(self)
+        self.calc_impedance()
+
+    def set_resistance(self,new_R):
+        if self.Rp == new_R:
+            return
+        self.Rp = new_R
+        self.impedance_change()
 
     def calc_impedance(self):
-      pass
+        self.G = 1./self.Rp
 
-    def set_incident_wave(self,a):
-      pass
+    def accept_incident_wave(self,a):
+        self.a = a
 
-    def get_reflected_wave(self):
-      pass
-
-##############################################
-#### RESISTOR
-##############################################
-
-class Resistor(WDFOnePort):
-    def __init__(self, R):
-      WDFOnePort.__init__(self)
-      self.Rval = R  # Port resistence set to physical resistance
-      self.calc_impedance()
-
-    def calc_impedance(self):
-      self.Rp = self.Rval
-
-    def set_resistance(self,R):
-      if self.Rval == R:
-        return
-      self.Rval = R
-      self.propagate_impedance_change()
-    
-    def __str__(self):
-      return str(self.Rp) + " Ohm Resistor"
-    
-    def set_incident_wave(self,a):
-      self.a = a
-
-    def get_reflected_wave(self):
-      self.b = 0
-      return self.b
-
-##############################################
-#### CAPACITOR
-##############################################
-
-class Capacitor(WDFOnePort):
-    def __init__(self, C, fs, tolerance=0,sSize=10):
-      WDFOnePort.__init__(self)
-      # gaussian distribution of vals below and above given C according to tolerance 
-      # random sample is selected and added to given capacitance value
-      self.tol = tolerance
-      data_normal = scipy.stats.norm.rvs(size = sSize,loc = 0, scale = C * self.tol / 2)
-      rand_samp = np.random.choice(data_normal)
-      self.C = C + rand_samp     
-      self.fs = fs
-      self.z = 0 
-      self.calc_impedance()
-
-    def set_capacitance(self,C):
-      if self.C == C:
-        return
-      self.C = C
-      self.propagate_impedance_change()
-    
-    def calc_impedance(self):
-      self.Rp = 1 / (2 * self.fs * self.C)
-    
-    def reset(self):
-      self.z = 0
-
-    def __str__(self):
-      return str(self.C) + " farad Capacitor"
-
-    def get_reflected_wave(self):
-        self.b = self.z
+    def propagate_reflected_wave(self):
+        self.b = 0
         return self.b
-    
-    def set_incident_wave(self, a):
+
+##########################################################################################################################################
+
+class Capcaitor(base_wdf):
+    def __init__(self,C,fs):
+        base_wdf.__init__(self)
+        self.fs = fs
+        self.C = C
+        self.z = 0
+        self.calc_impedance()
+
+    def prepare(self,new_fs):
+        self.fs = new_fs
+        self.impedance_change()
+        self.reset()
+
+    def set_capacitance(self,new_C):
+        if self.C == new_C:
+            return
+        self.C = new_C
+        self.impedance_change()
+
+    def calc_impedance(self):
+        self.Rp = 1./ (2 * self.C * self.fs)
+        self.G = 1./self.Rp
+
+    def accept_incident_wave(self,a):
         self.a = a
         self.z = self.a
 
-##############################################
-#### INDUCTOR
-##############################################
+    def propagate_reflected_wave(self):
+        self.b = self.z
+        return self.b
 
-class Inductor(WDFOnePort):
-    def __init__(self, L,fs):
-      WDFOnePort.__init__(self)
-      self.fs = fs
-      self.L = L
-      self.z = 0
-      self.calc_impedance()
+    def reset(self):
+        self.z = 0
+
+##########################################################################################################################################
+
+class Inductor(base_wdf):
+    def __init__(self,L,fs):
+        self.fs = fs
+        self.L = L
+        self.z = 0
+        self.calc_impedance()
+
+    def prepare(self,new_fs):
+        self.fs = new_fs
+        self.impedance_change()
+        self.reset()
+
+    def set_inductance(self,new_L):
+        if self.L == new_L:
+            return
+        self.L = new_L
+        self.impedance_change()
 
     def calc_impedance(self):
-      self.Rp = 2 * self.fs * self.L
+        self.Rp = 1./(2 * self.L * self.fs)
+        self.G = 1./self.Rp
 
-    def set_inductance(self,L):
-      self.L = L
-      self.propagate_impedance_change()
-
-    def __str__(self):
-      return str(self.L) + " henry Inductor"
-    
-    def get_reflected_wave(self):
-      self.b = -self.z
-      return self.b
-    
-    def set_incident_wave(self, a):
-      self.a = a
-      self.z = self.a
-
-##############################################
-#### SHORT CIRCUIT, OPEN CIRCUIT, SWITCH
-##############################################
-
-class ShortCircuit(WDFOnePort):
-    def __init__(self):
-        WDFOnePort.__init__(self)
-    
-    def get_reflected_wave(self, a):
+    def accept_incident_wave(self,a):
         self.a = a
-        self.b = -a
+        self.z = self.a 
+
+    def propagate_reflected_wave(self):
+        self.b = -self.z 
         return self.b
 
-class OpenCircuit(WDFOnePort):
-    def __init__(self):
-        WDFOnePort.__init__(self)
-    
-    def get_reflected_wave(self):
-        self.b = self.a
+    def reset(self):
+        self.z = 0 
+
+##########################################################################################################################################
+
+def Parallel_adaptor(base_wdf):
+    def __init__(self,p1,p2):
+        base_wdf.__init__(self)
+        self.p1 = p1
+        self.p2 = p2
+        self.b_temp = 0
+        self.b_diff = 0
+        self.p1_reflect = 1
+        p1.connect_to_parent(self)
+        p2.connect_to_parent(self)
+        self.calc_impedance()
+
+    def calc_impedance(self):
+        self.G = self.p1.G + self.p2.G
+        self.Rp = 1./self.G
+        self.p1_reflect = self.p1.G / self.G
+
+    def accept_incident_wave(self,a):
+        b2 = a + self.b_temp
+        self.p1.accept_incident_wave(self.b_diff + b2)
+        self.p2.accept_incident_wave(b2)
+        self.a = a
+
+    def propagate_reflected_wave(self):
+        self.p1.propagate_reflected_wave()
+        self.p2.propagate_reflected_wave()
+        self.b_diff = self.p2.b - self.p1.b 
+        self.b_temp = -self.p1_reflect * self.b_diff
+        self.b = self.p2.b + self.b_temp
         return self.b
 
-class Switch(WDFOnePort):
-    def __init__(self):
-        WDFOnePort.__init__(self)
-        __state = False 
-    
-    def get_reflected_wave(self):
-        if __state: # Switch closed
-            self.b = -self.a
-        else:       # Switch open
-            self.a = self.a
-            self.b = self.a
-            
+##########################################################################################################################################
+
+def Series_adaptor(base_wdf):
+    def __init__(self,p1,p2):
+        base_wdf.__init__(self)
+        self.p1 = p1
+        self.p2 = p2
+        self.p1_reflect = 1
+        self.calc_impedance()
+        p1.connect_to_parent(self)
+        p2.connect_to_parent(self)
+
+    def calc_impedance(self):
+        self.Rp = self.p1.Rp + self.p2.Rp
+        self.G = 1./self.Rp
+        self.p1_reflect = self.p1.Rp / self.Rp
+
+    def accept_incident_wave(self,a):
+        b1 = self.p1.b - self.p1_reflect * (a + self.p1.b + self.p2.b)
+        self.p1.accept_incident_wave(b1)
+        self.p2.accept_incident_wave(0 - (a + b1))
+        self.a = a
+
+    def propagate_reflected_wave(self):
+        self.b = -(self.p1.propagate_reflected_wave() + self.p2.propagate_reflected_wave())
         return self.b
-    
-    def change_state(self, state):
-        __state = state
 
-##############################################
-#### IDEAL VOLTAGE/CURRENT SOURCES
-##############################################
+##########################################################################################################################################
 
-class IdealVoltageSource(WDFOnePort):
+class Polarity_inverter(base_wdf):
+    def __init__(self,p1):
+        base_wdf.__init__(self)
+        p1.connect_to_parent(self)
+        self.p1 = p1
+        self.calc_impedance()
+
+    def calc_impedance(self):
+        self.Rp = self.p1.Rp 
+        self.G = 1./self.Rp
+
+    def accept_incident_wave(self,a):
+        self.a = a
+        self.p1.accept_incident_wave(-a)
+
+    def propagate_reflected_wave(self):
+        self.b = 0 - self.p1.propagate_reflected_wave()
+
+##########################################################################################################################################
+
+class Ideal_voltage_source(root_wdf):
     def __init__(self,next):
-        WDFOnePort.__init__(self)
+        root_wdf.__init__(self)
         self.next = next
-        self.next.connect_to_parent(self)
         self.Vs = 0
-        self.Rp = 0
+        self.calc_impedance()
 
-    def __str__(self):
-      return "Ideal voltage source"
-        
-    def set_voltage(self,vs):
-      self.Vs = vs
+    def calc_impedance(self):
+        pass
 
-    def set_incident_wave(self,a):
-      self.a = a
+    def set_voltage(self,new_V):
+        self.Vs = new_V
 
-    def get_reflected_wave(self):
-      self.b = 0 - self.a * 2 * self.Vs
-      return self.b
+    def accept_incident_wave(self,a):
+        self.a = a
 
-class IdealCurrentSource(WDFOnePort):
-    def __init__(self):
-        WDFOnePort.__init__(self)
-        
-    def __str__(self):
-      return "Ideal current source"
+    def propagate_reflected_wave(self):
+        self.b = 0 - self.a + 2 * self.Vs
 
-    def get_reflected_wave(self, i_s=0):
-        self.b = self.a - 2*R_p*i_s
+##########################################################################################################################################
+
+class Resistive_voltage_source(base_wdf):
+    def __init__(self,Rval: float = None):
+        base_wdf.__init__(self)
+        self.Rval = Rval if Rval else 1e-9
+        self.Vs = self.calc_impedance()
+
+    def set_resistance(self,new_R):
+        if self.Rval = new_R:
+            return
+        self.Rval = new_R
+        self.impedance_change()
+
+    def calc_impedance(self):
+        self.Rp = self.Rval
+        self.G = 1./self.Rp
+
+    def set_voltage(self,new_V):
+        self.Vs = new_V
+
+    def accept_incident_wave(self,a):
+        self.a = a
+
+    def propagate_reflected_wave(self):
+        self.b = self.Vs 
         return self.b
 
-##############################################
-#### RESISTIVE VOLTAGE/CURRENT SOURCES
-##############################################
+##########################################################################################################################################
 
-class ResistiveVoltageSource(WDFOnePort):
-    def __init__(self, Rs):
-      WDFOnePort.__init__(self)
-      self.Rval = Rs
-      self.v_s = 0
-      self.calc_impedance()
-  
+class Ideal_current_source(root_wdf):
+    def __init__(self,next):
+        root_wdf.__init__(self)
+        self.next = next
+        self.Is = 0
+        self.next.connect_to_parent(self)
+        self.calc_impedance()
+
     def calc_impedance(self):
-      self.Rp = self.Rval
+        self.two_R = 2 * self.next.Rp 
+        self.two_R_Is = self.two_R * self.Is
+
+    def accept_incident_wave(self,a):
+        self.a = a
+
+    def propagate_reflected_wave(self):
+        self.b = self.two_R_Is + self.a
+        return self.b
+
+##########################################################################################################################################
+
+class Resistive_voltage_source(base_wdf):
+    def __init__(self,Rval: float = None):
+        base_wdf.__init__(self)
+        self.Is = 0
+        self.Rval = Rval if Rval else 1e9
+        self.calc_impedance()
+
+    def set_resistance(self,new_R):
+        if self.Rval = new_R:
+            return
+        self.Rval = new_R
+        self.impedance_change()
+
+    def calc_impedance(self):
+        self.Rp = self.Rval
+        self.G = 1./self.Rp
+
+    def set_current_(self,new_I):
+        self.Is = new_I
+
+    def accept_incident_wave(self,a):
+        self.a = a
+
+    def propagate_reflected_wave(self):
+        self.b = self.Rp * self.Is
+        return self.b
+
+##########################################################################################################################################
+
+class Diode(root_wdf):
+    def __init__(self,next,Is,Vt=25.85e-3,n_diodes=1):
+        root_wdf.__init__(self)
+        self.next = next
+        next.connect_to_parent(self)
+        self.set_diode_params(Is,Vt,n_diodes)
+
+    def set_diode_params(self,Is,Vt,n_diodes):
+        self.Is = Is
+        self.Vt = Vt * n_diodes
+        self.one_over_Vt = 1./self.Vt
+        self.calc_impedance()
+
+    def accept_incident_wave(self,a):
+        self.a = a
+
+    def calc_impedance(self):
+        self.two_R_Is = 2 * self.next.Rp * self.Is
+        self.R_Is_over_Vt = 2 * self.next.Rp * self.Is * self.one_over_Vt
+        self.logR_Is_over_Vt = np.log(self.R_Is_over_Vt)
     
-    def __str__(self):
-      return str(self.Rp) + " Ohm resistive voltage source"
+    def omega4(self,x):
+        x1 = -3.341459552768620
+        x2 = 8.0
+        a = -1.314293149877800e-3
+        b = 4.775931364975583e-2
+        c = 3.631952663804445e-1
+        d = 6.313183464296682e-1
+        if x < x1:
+            y = 0
+        elif x < x2:
+            y = d + x * (c + x * (b + x * a))
+        else:
+            y = x - np.log(x)
+        return y - (y - np.exp(x - y) / (y + 1))
 
-    def set_voltage(self,v_s):
-      self.v_s = v_s
-
-    def set_incident_wave(self,a):
-      self.a = a
-
-    def get_reflected_wave(self):
-      self.b = self.v_s
-      return self.b
-
-class ResistiveCurrentSource(WDFOnePort):
-    def __init__(self, R):
-      WDFOnePort.__init__(self)
-      self.Rval = R
-
-    def calc_impedance(self):
-      self.Rp = self.Rval
-    
-    def __str__(self):
-      return str(self.Rp) + " Ohm resistive current source"
-
-    def get_reflected_wave(self,i_s=0):
-        self.b = self.Rp*i_s
+    def propagate_reflected_wave(self):
+        self.b = self.a + self.two_R_Is - 2 * self.Vt * self.omega4(self.logR_Is_over_Vt + self.a * self.one_over_Vt + self.R_Is_over_Vt)
         return self.b
 
-##############################################
-#### DIODE PAIR
-##############################################
-
-class Diode_pair(WDFOnePort):
-    def __init__(self,next,nDiodes=2,Is=2.52e-9,Vt = 25.85e-3,q="best"):
-      WDFOnePort.__init__(self)
-      self.q = q
-      self.next = next
-      self.next.connect_to_parent(self)
-      self.set_params(Is,Vt,nDiodes)
-      self.calc_impedance()
-
-    def set_params(self,Is,Vt,nDiodes):
-      self.Is = Is
-      self.Rp = self.next.Rp
-      self.Vt = Vt * nDiodes
-      self.oneOverVt = 1. / self.Vt
-
-    def calc_impedance(self):
-      self.R_Is = self.Rp * self.Is
-      self.R_Is_overVT = self.R_Is * self.oneOverVt
-      self.logR_Is_overVT = np.log(self.R_Is_overVT)
-
-    def set_incident_wave(self,a):
-      self.a = a
-
-    def get_reflected_wave(self):
-        def omega4(x):
-            x1 = -3.341459552768620
-            x2 = 8.0
-            a = -1.314293149877800e-3
-            b = 4.775931364975583e-2
-            c = 3.631952663804445e-1
-            d = 6.313183464296682e-1
-            if x < x1:
-                y = 0
-            elif x < x2:
-                y = d + x * (c + x * (b + x * a))
-            else:
-                y = x - np.log(x)
-            return y - (y - np.exp(x - y) / (y + 1))
-
-        lam = np.sign(self.a)
-        lam_a_overVT = lam * self.a / self.Vt
-        if self.q == "best":
-          self.b = self.a - (2 * self.Vt) * lam * (omega4(self.logR_Is_overVT + lam_a_overVT)) - omega4(self.logR_Is_overVT - lam_a_overVT)
-        elif self.q == "good":
-          self.b = self.a + 2 * lam * (self.R_Is - self.Vt * omega4(self.logR_Is_overVT + lam * self.a * self.oneOverVt + self.R_Is_overVT))
+class Diode_pair(Diode):
+    def propagate_reflected_wave(self):
+        try:
+            lam = np.sign(self.a)
+        except:
+            lam = 0
+        lam_a_over_Vt = lam * self.a * self.one_over_Vt
+        self.b = self.a - 2 * self.Vt * lam * self.omega4(self.logR_Is_over_Vt + lam_a_over_Vt) - self.omega4(self.logR_Is_over_Vt - lam_a_over_Vt)
         return self.b
 
-##############################################
-#### ADAPTOR BASE CLASS
-##############################################
+##########################################################################################################################################
 
-class adaptor(WDFOnePort):
-  def __init__(self,p1,p2):
-    WDFOnePort.__init__(self)
-    self.p1_reflect = 1.
-    self.p1 = p1
-    self.p2 = p2
-    self.p1.connect_to_parent(self)
-    self.p2.connect_to_parent(self)
-    self.calc_impedance()
-
-##############################################
-#### SERIES ADAPTOR
-##############################################
-
-class Series(adaptor):
-  def __init__(self,p1,p2):
-    adaptor.__init__(self,p1,p2)
-
-  def calc_impedance(self):
-    self.Rp = self.p1.Rp + self.p2.Rp
-    self.G = 1./self.Rp
-    self.p1_reflect = self.p1.Rp / self.Rp
-
-  def set_incident_wave(self,a):
-    b1 = self.p1.b - self.p1_reflect * (a + self.p1.b + self.p2.b)
-    self.p1.set_incident_wave(b1)
-    self.p2.set_incident_wave(0 - (a + b1))
-    self.a = a
-
-  def get_reflected_wave(self):
-    self.b = 0 - self.p1.get_reflected_wave() + self.p2.get_reflected_wave()
-    return self.b
-
-##############################################
-#### PARALLEL ADAPTOR
-##############################################
-
-class Parallel(adaptor):
-  def __init__(self,p1,p2):
-    adaptor.__init__(self,p1,p2)
-    self.b_temp = 0
-    self.b_diff = 0
-
-  def calc_impedance(self):
-    self.G = (1./self.p1.Rp) + (1./self.p2.Rp)
-    self.Rp = 1./self.G
-    self.p1_reflect = (1./self.p1.Rp) / self.G
-
-  def set_incident_wave(self,a):
-    b2 = a + self.b_temp
-    self.p1.set_incident_wave(self.b_diff + b2)
-    self.p2.set_incident_wave(b2)
-    self.a = a
-
-  def get_reflected_wave(self):
-    self.p1.get_reflected_wave()
-    self.p2.get_reflected_wave()
-    self.b_diff = self.p2.b - self.p1.b
-    self.b_temp = 0 - self.p1_reflect * self.b_diff
-    self.b = self.p2.b + self.b_temp
-    return self.b
