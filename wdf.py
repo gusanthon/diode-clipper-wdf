@@ -132,7 +132,7 @@ class Inductor(base_wdf):
 
 ##########################################################################################################################################
 
-def Parallel_adaptor(base_wdf):
+class Parallel_adaptor(base_wdf):
     def __init__(self,p1,p2):
         base_wdf.__init__(self)
         self.p1 = p1
@@ -165,7 +165,7 @@ def Parallel_adaptor(base_wdf):
 
 ##########################################################################################################################################
 
-def Series_adaptor(base_wdf):
+class Series_adaptor(base_wdf):
     def __init__(self,p1,p2):
         base_wdf.__init__(self)
         self.p1 = p1
