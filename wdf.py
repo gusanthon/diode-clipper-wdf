@@ -41,6 +41,7 @@ class root_wdf(base_wdf):
 class Resistor(base_wdf):
     def __init__(self,R=1e-9):
         base_wdf.__init__(self)
+        self.Rp = R
         self.calc_impedance()
 
     def set_resistance(self,new_R):
@@ -61,7 +62,7 @@ class Resistor(base_wdf):
 
 ##########################################################################################################################################
 
-class Capcaitor(base_wdf):
+class Capacitor(base_wdf):
     def __init__(self,C,fs):
         base_wdf.__init__(self)
         self.fs = fs
@@ -353,7 +354,7 @@ class Diode(root_wdf):
 
 class Diode_pair(Diode):
     def __init__(self,next,Is,Vt=25.85e-3,n_diodes=2):
-        Diode.__init__(self,Is,Vt,n_diodes)
+        Diode.__init__(self,next,Is,Vt,n_diodes)
 
     def propagate_reflected_wave(self):
         try:
