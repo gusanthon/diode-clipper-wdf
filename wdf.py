@@ -116,7 +116,7 @@ class Inductor(base_wdf):
         self.impedance_change()
 
     def calc_impedance(self):
-        self.Rp = 1./(2 * self.L * self.fs)
+        self.Rp = 2 * self.L * self.fs
         self.G = 1./self.Rp
 
     def accept_incident_wave(self,a):
