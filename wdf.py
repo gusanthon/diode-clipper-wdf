@@ -1,5 +1,4 @@
 import numpy as np
-from pyrsistent import b
 
 class base_wdf():
     def __init__(self):
