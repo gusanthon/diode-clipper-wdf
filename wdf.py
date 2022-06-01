@@ -1,4 +1,5 @@
 import numpy as np
+from pyrsistent import b
 
 class base_wdf():
     def __init__(self):
@@ -231,6 +232,7 @@ class Ideal_voltage_source(root_wdf):
 
     def propagate_reflected_wave(self):
         self.b = 0 - self.a + 2 * self.Vs
+        return self.b
 
 ##########################################################################################################################################
 
