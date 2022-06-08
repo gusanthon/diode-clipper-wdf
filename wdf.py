@@ -53,9 +53,6 @@ class Resistor(base_wdf):
     def calc_impedance(self):
         self.G = 1./self.Rp
 
-    def accept_incident_wave(self,a):
-        self.a = a
-
     def propagate_reflected_wave(self):
         self.b = 0
         return self.b
@@ -226,9 +223,6 @@ class Ideal_voltage_source(root_wdf):
     def set_voltage(self,new_V):
         self.Vs = new_V
 
-    def accept_incident_wave(self,a):
-        self.a = a
-
     def propagate_reflected_wave(self):
         self.b = 0 - self.a + 2 * self.Vs
         return self.b
@@ -254,9 +248,6 @@ class Resistive_voltage_source(base_wdf):
     def set_voltage(self,new_V):
         self.Vs = new_V
 
-    def accept_incident_wave(self,a):
-        self.a = a
-
     def propagate_reflected_wave(self):
         self.b = self.Vs 
         return self.b
@@ -274,9 +265,6 @@ class Ideal_current_source(root_wdf):
     def calc_impedance(self):
         self.two_R = 2 * self.next.Rp 
         self.two_R_Is = self.two_R * self.Is
-
-    def accept_incident_wave(self,a):
-        self.a = a
 
     def propagate_reflected_wave(self):
         self.b = self.two_R_Is + self.a
@@ -304,9 +292,6 @@ class Resistive_current_source(base_wdf):
     def set_current_(self,new_I):
         self.Is = new_I
 
-    def accept_incident_wave(self,a):
-        self.a = a
-
     def propagate_reflected_wave(self):
         self.b = self.Rp * self.Is
         return self.b
@@ -325,9 +310,6 @@ class Diode(root_wdf):
         self.Vt = Vt * n_diodes
         self.one_over_Vt = 1./self.Vt
         self.calc_impedance()
-
-    def accept_incident_wave(self,a):
-        self.a = a
 
     def calc_impedance(self):
         self.two_R_Is = 2 * self.next.Rp * self.Is
@@ -367,4 +349,3 @@ class Diode_pair(Diode):
         return self.b
 
 ##########################################################################################################################################
-
