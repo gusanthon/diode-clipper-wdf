@@ -1,5 +1,9 @@
 import numpy as np
 
+##########################################################################################################################################
+########### WDF ELEMENT CLASSES 
+##########################################################################################################################################
+
 class base_wdf():
     def __init__(self):
         self.a, self.b = 0, 0
@@ -169,12 +173,12 @@ class Series_adaptor(base_wdf):
         self.p1 = p1
         self.p2 = p2
         self.p1_reflect = 1
-        self.calc_impedance()
         p1.connect_to_parent(self)
         p2.connect_to_parent(self)
-
-    def calc_impedance(self):
         self.Rp = self.p1.Rp + self.p2.Rp
+        self.calc_impedance()
+        
+    def calc_impedance(self):
         self.G = 1./self.Rp
         self.p1_reflect = self.p1.Rp / self.Rp
 
@@ -349,3 +353,82 @@ class Diode_pair(Diode):
         return self.b
 
 ##########################################################################################################################################
+########### CIRCUIT CLASSES 
+##########################################################################################################################################
+
+class Diode_clipper():
+
+    def __init__(self,sample_rate,cutoff=20000,input_gain=1,output_gain=1 ) -> None:
+        self.fs = sample_rate
+        self.cutoff = cutoff
+        self.input_gain = input_gain
+        self.output_gain = output_gain
+
+        self.C = 47e-9
+        self.R = 1./ (2 * np.pi * self.C * self.cutoff)
+
+        self.R1 = Resistor(self.R)
+        self.Vs = Resistive_voltage_source()
+
+        self.S1 = Series_adaptor(self.Vs,self.R1)
+        self.C1 = Capacitor(self.C,self.fs)
+
+        self.P1 = Parallel_adaptor(self.S1,self.C1)
+        self.Dp = Diode_pair(self.P1,2.52e-9)
+
+    def process(self,sample):
+        sample *= self.input_gain
+        self.Vs.set_voltage(sample)
+        self.Dp.accept_incident_wave(self.P1.propagate_reflected_wave())
+        self.P1.accept_incident_wave(self.Dp.propagate_reflected_wave())
+        return (self.C1.wave_to_voltage() * self.output_gain)
+
+    def __call__(self, *args: any, **kwds: any) -> any:
+        return self.process(args[0])
+
+    def set_cutoff(self,new_cutoff):
+        self.cutoff = new_cutoff
+        self.R = 1./ 2 * np.pi * self.cutoff * self.C
+        self.R1.set_resistance(self.R)
+
+    def set_input_gain(self,new_gain):
+        self.input_gain = new_gain
+
+    def set_output_gain(self,new_gain):
+        self.output_gain = new_gain
+
+class Passive_LPF():
+
+    def __init__(self,sample_rate,cutoff=1000) -> None:
+        self.fs = sample_rate
+        self.cutoff = cutoff
+
+        self.Z = 800
+        self.C = (1 / self.Z) / (2. * np.pi * cutoff)
+
+        self.R1 = Resistor(10)
+        self.R2 = Resistor(1e4)
+
+        self.C1 = Capacitor(self.C,self.fs)
+        self.C2 = Capacitor(self.C,self.fs)
+
+        self.S1 = Series_adaptor(self.R2,self.C2)
+        self.P1 = Parallel_adaptor(self.C1,self.S1)
+        self.S2 = Series_adaptor(self.R1, self.P1)
+
+        self.Vs = Ideal_voltage_source(self.P1)
+
+    def process(self,sample):
+        self.Vs.set_voltage(sample)
+        self.Vs.accept_incident_wave(self.S2.propagate_reflected_wave())
+        self.S2.accept_incident_wave(self.Vs.propagate_reflected_wave())
+        return self.C2.wave_to_voltage()
+
+    def __call__(self, *args: any, **kwds: any) -> any:
+        return self.process(args[0])
+
+    def set_cutoff(self,new_cutoff):
+        self.cutoff = new_cutoff
+        self.C = (1. /self.Z) / (2 * np.pi * self.cutoff)
+        self.C1.set_capacitance(self.C)
+        self.C2.set_capacitance(self.C)
