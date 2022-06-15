@@ -358,11 +358,11 @@ class Diode_pair(Diode):
 
 class Diode_clipper():
 
-    def __init__(self,sample_rate,cutoff=20000,input_gain=1,output_gain=1 ) -> None:
+    def __init__(self,sample_rate,cutoff=1000,input_gain_db=0,output_gain_db=0,n_diodes=2) -> None:
         self.fs = sample_rate
         self.cutoff = cutoff
-        self.input_gain = input_gain
-        self.output_gain = output_gain
+        self.input_gain = 10**(input_gain_db/20)
+        self.output_gain = 10**(output_gain_db/20)
 
         self.C = 47e-9
         self.R = 1./ (2 * np.pi * self.C * self.cutoff)
@@ -374,7 +374,7 @@ class Diode_clipper():
         self.C1 = Capacitor(self.C,self.fs)
 
         self.P1 = Parallel_adaptor(self.S1,self.C1)
-        self.Dp = Diode_pair(self.P1,2.52e-9)
+        self.Dp = Diode_pair(self.P1,2.52e-9,n_diodes=n_diodes)
 
     def process(self,sample):
         sample *= self.input_gain
@@ -391,11 +391,11 @@ class Diode_clipper():
         self.R = 1./ 2 * np.pi * self.cutoff * self.C
         self.R1.set_resistance(self.R)
 
-    def set_input_gain(self,new_gain):
-        self.input_gain = new_gain
+    def set_input_gain(self,gain_db):
+        self.input_gain = 10**(gain_db/20)
 
-    def set_output_gain(self,new_gain):
-        self.output_gain = new_gain
+    def set_output_gain(self,gain_db):
+        self.output_gain = 10**(gain_db/20)
 
 class Passive_LPF():
 
