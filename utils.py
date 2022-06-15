@@ -1,4 +1,5 @@
 import scipy
+import scipy.signal
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -129,11 +130,42 @@ def compare_vs_spice(x,fs,spicepath,mult_locater=(np.pi/2),denom=2,title=''):
     wdf_f, wdf_H, wdf_angles = freqz(x,fs)
     spice_f,spice_H,spice_angles = ltspice_freqz(spicepath)
     plot_magnitude_response(wdf_f,wdf_H,label='wdf')
-    plot_magnitude_response(spice_f,spice_H,label='spice',c='orange',title=title)
+    plot_magnitude_response(spice_f,spice_H,label='spice',c='orange',title=title+ ' ')
     plt.legend()
     plt.show()
 
     plot_phase_response(wdf_f,wdf_angles,label='wdf')
-    plot_phase_response(spice_f,spice_angles,label='spice',mult_locater=mult_locater,denom=denom,c='orange',title=title)
+    plot_phase_response(spice_f,spice_angles,label='spice',mult_locater=mult_locater,denom=denom,c='orange',title=title+' ')
     plt.legend()
+    plt.show()
+
+def plot_freqz(x: np.ndarray, fs: int, title: str="Frequency response"):
+    # Plot the frequency response of a signal x.
+    w, h = scipy.signal.freqz(x, 1, 2**13)
+    # w, h = signal.freqz(x, 1)
+    magnitude = 20 * np.log10(np.abs(h) + np.finfo(float).eps)
+    phase = np.angle(h)
+    magnitude_peak = np.max(magnitude)
+    top_offset = 10
+    bottom_offset = 70
+    frequencies = w / (2 * np.pi) * fs
+
+    _, ax = plt.subplots(nrows=2, ncols=1, figsize=(12, 5))
+    # Make plot pretty.
+    xlims = [10**0, 10**np.log10(fs/2)]
+    ax[0].semilogx(frequencies, magnitude, label="WDF")
+    ax[0].set_xlim(xlims)
+    ax[0].set_ylim([magnitude_peak - bottom_offset, magnitude_peak + top_offset])
+    ax[0].set_xlabel("Frequency [Hz]")
+    ax[0].set_ylabel("Magnitude [dBFs]")
+
+    #plt.set_xlim([np.min(f), np.max(f)])
+    phase = 180 * phase / np.pi
+    ax[1].semilogx(frequencies, phase, label="WDF")
+    ax[1].set_xlim(xlims)
+    ax[1].set_ylim([-180, 180])
+    ax[1].set_xlabel("Frequency [Hz]")
+    ax[1].set_ylabel("Phase [degrees]")
+
+    plt.suptitle(title)
     plt.show()
