@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats
 
 ##########################################################################################################################################
 ########### WDF ELEMENT CLASSES 
@@ -37,9 +38,6 @@ class root_wdf(base_wdf):
     def connect_to_parent(self, p):
         pass
 
-    def impedance_change(self):
-        self.calc_impedance()
-
 ##########################################################################################################################################
 
 class Resistor(base_wdf):
@@ -64,10 +62,13 @@ class Resistor(base_wdf):
 ##########################################################################################################################################
 
 class Capacitor(base_wdf):
-    def __init__(self,C,fs):
+    def __init__(self,C,fs, tolerance = 0,sample_size = 20):
         base_wdf.__init__(self)
         self.fs = fs
-        self.C = C
+        self.tolerance = tolerance
+        data_normal = scipy.stats.norm.rvs(size = sample_size,loc = 0, scale = C * self.tolerance / 2)
+        rand_samp = np.random.choice(data_normal)
+        self.C = C + rand_samp
         self.z = 0
         self.calc_impedance()
 
@@ -336,7 +337,7 @@ class Diode(root_wdf):
         return y - (y - np.exp(x - y) / (y + 1))
 
     def propagate_reflected_wave(self):
-        self.b = self.a + self.two_R_Is - 2 * self.Vt * self.omega4(self.logR_Is_over_Vt + self.a * self.one_over_Vt + self.R_Is_over_Vt)
+        self.b = self.a + self.two_R_Is - (2 * self.Vt) * self.omega4(self.logR_Is_over_Vt + self.a * self.one_over_Vt + self.R_Is_over_Vt)
         return self.b
 
 class Diode_pair(Diode):
@@ -344,12 +345,13 @@ class Diode_pair(Diode):
         Diode.__init__(self,next,Is,Vt,n_diodes)
 
     def propagate_reflected_wave(self):
-        try:
-            lam = np.sign(self.a)
-        except:
-            lam = 0
+        # try:
+        #     lam = np.sign(self.a)
+        # except:
+        #     lam = 0
+        lam = np.sign(self.a)
         lam_a_over_Vt = lam * self.a * self.one_over_Vt
-        self.b = self.a - 2 * self.Vt * lam * self.omega4(self.logR_Is_over_Vt + lam_a_over_Vt) - self.omega4(self.logR_Is_over_Vt - lam_a_over_Vt)
+        self.b = self.a - (2 * self.Vt) * lam * (self.omega4(self.logR_Is_over_Vt + lam_a_over_Vt) - self.omega4(self.logR_Is_over_Vt - lam_a_over_Vt))
         return self.b
 
 ##########################################################################################################################################
@@ -381,7 +383,7 @@ class Diode_clipper():
         self.Vs.set_voltage(sample)
         self.Dp.accept_incident_wave(self.P1.propagate_reflected_wave())
         self.P1.accept_incident_wave(self.Dp.propagate_reflected_wave())
-        return (self.C1.wave_to_voltage() * self.output_gain)
+        return -(self.C1.wave_to_voltage() * self.output_gain)
 
     def __call__(self, *args: any, **kwds: any) -> any:
         return self.process(args[0])
