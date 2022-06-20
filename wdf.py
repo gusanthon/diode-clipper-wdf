@@ -345,10 +345,6 @@ class Diode_pair(Diode):
         Diode.__init__(self,next,Is,Vt,n_diodes)
 
     def propagate_reflected_wave(self):
-        # try:
-        #     lam = np.sign(self.a)
-        # except:
-        #     lam = 0
         lam = np.sign(self.a)
         lam_a_over_Vt = lam * self.a * self.one_over_Vt
         self.b = self.a - (2 * self.Vt) * lam * (self.omega4(self.logR_Is_over_Vt + lam_a_over_Vt) - self.omega4(self.logR_Is_over_Vt - lam_a_over_Vt))
