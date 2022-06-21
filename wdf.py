@@ -62,7 +62,7 @@ class Resistor(base_wdf):
 ##########################################################################################################################################
 
 class Capacitor(base_wdf):
-    def __init__(self,C,fs, tolerance = 0,sample_size = 20):
+    def __init__(self,C,fs, tolerance = 0, sample_size = 20):
         base_wdf.__init__(self)
         self.fs = fs
         self.tolerance = tolerance
@@ -318,7 +318,7 @@ class Diode(root_wdf):
 
     def calc_impedance(self):
         self.two_R_Is = 2 * self.next.Rp * self.Is
-        self.R_Is_over_Vt = 2 * self.next.Rp * self.Is * self.one_over_Vt
+        self.R_Is_over_Vt = self.next.Rp * self.Is * self.one_over_Vt
         self.logR_Is_over_Vt = np.log(self.R_Is_over_Vt)
     
     def omega4(self,x):
@@ -394,6 +394,8 @@ class Diode_clipper():
 
     def set_output_gain(self,gain_db):
         self.output_gain = 10**(gain_db/20)
+
+##########################################################################################################################################
 
 class Passive_LPF():
 
