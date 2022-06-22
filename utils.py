@@ -13,7 +13,7 @@ def gen_test_wave(fs,f,amp,t,kind):
     x = np.cos(2 * np.pi * f * n) * amp
   elif kind == 'delta':
     x = np.zeros(N)
-    x[0] = 1
+    x[0] = amp
   return x
 
 def read_to_linear(path,bd,lin=0):
@@ -68,7 +68,7 @@ def freqz(x,fs):
     w,h = scipy.signal.freqz(x,1,4096)
     H = 20 * np.log10(np.abs(h))
     f = w / (2 * np.pi) * fs
-    angles = np.unwrap(np.angle((h)))
+    angles = np.unwrap(np.angle(h))
     return f,H,angles
 
 def plot_magnitude_response(f,H,label='magnitude',c='b',title=''):
@@ -170,27 +170,22 @@ def plot_freqz(x: np.ndarray, fs: int, title: str="Frequency response"):
     plt.suptitle(title)
     plt.show()
 
-def omega3(x):
+def omega4(x):
     """
-    3rd order approximation of wright omega function
+    4th order approximation of Wright Omega function
     """
-    x1 =  -3.341459552768620
+    x1 = -3.341459552768620
     x2 = 8.0
-    a =  -1.314293149877800e-3
+    a = -1.314293149877800e-3
     b = 4.775931364975583e-2
     c = 3.631952663804445e-1
     d = 6.313183464296682e-1
     if x < x1:
-        return 0
+        y = 0
     elif x < x2:
-        return d + x * (c + x * (b + x * a))
-    return x - np.log(x)
-
-def omega4(x):
-    """
-    4th order approximation of wright omega function
-    """
-    y = omega3(x)
+        y = d + x * (c + x * (b + x * a))
+    else:
+        y = x - np.log(x)
     return y - (y - np.exp(x - y)) / (y + 1)
 
 def compare_plot(x,y,out_idx,title='',x_label='input',y_label='output'):

@@ -14,8 +14,8 @@ class base_wdf():
     def connect_to_parent(self,p):
         self.parent = p
 
-    def calc_impedance(self):
-        pass
+    def accept_incident_wave(self,a):
+        self.a = a
 
     def impedance_change(self):
         self.calc_impedance()
@@ -24,23 +24,20 @@ class base_wdf():
 
     def wave_to_voltage(self):
         return (self.a + self.b) / 2.
+        
+    def calc_impedance(self):
+        pass
 
     def propagate_reflected_wave(self):
         pass
-
-    def accept_incident_wave(self,a):
-        self.a = a
 
 class root_wdf(base_wdf):
     def __init__(self):
         base_wdf.__init__(self)
         self.next = None
 
-    def connectToParent(self,p):
-        pass
-
-    def propogateImpedanceChange(self):
-        self.calcImpedance()
+    def connect_to_parent(self,p):
+        raise Exception("Root elements cannot be connected to a parent")
 
 ##########################################################################################################################################
 
@@ -242,7 +239,8 @@ class Resistive_voltage_source(base_wdf):
     def __init__(self,Rval: float = None):
         base_wdf.__init__(self)
         self.Rval = Rval if Rval else 1e-9
-        self.Vs = self.calc_impedance()
+        self.Vs = 0
+        self.calc_impedance()
 
     def set_resistance(self,new_R):
         if self.Rval == new_R:
