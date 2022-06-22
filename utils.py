@@ -169,3 +169,35 @@ def plot_freqz(x: np.ndarray, fs: int, title: str="Frequency response"):
 
     plt.suptitle(title)
     plt.show()
+
+def omega3(x):
+    """
+    3rd order approximation of wright omega function
+    """
+    x1 =  -3.341459552768620
+    x2 = 8.0
+    a =  -1.314293149877800e-3
+    b = 4.775931364975583e-2
+    c = 3.631952663804445e-1
+    d = 6.313183464296682e-1
+    if x < x1:
+        return 0
+    elif x < x2:
+        return d + x * (c + x * (b + x * a))
+    return x - np.log(x)
+
+def omega4(x):
+    """
+    4th order approximation of wright omega function
+    """
+    y = omega3(x)
+    return y - (y - np.exp(x - y)) / (y + 1)
+
+def compare_plot(x,y,out_idx,title='',x_label='input',y_label='output'):
+  _, ax = plt.subplots(1, 1, figsize= (10, 4))
+  ax.plot(x[:out_idx],label=x_label)
+  ax.plot(y[:out_idx],label=y_label)
+  ax.set_xlim([0, out_idx-1])
+  plt.title(title)
+  plt.legend()
+  plt.show()

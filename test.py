@@ -6,39 +6,46 @@ from utils import *
 #########
 
 fs = 44100
-sin = gen_test_wave(fs,1000,1,.5,'sin')
+sin = gen_test_wave(fs,1000,6,.5,'sin')
 delta = gen_test_wave(fs,1000,1,.1,'delta')
 
 
-#### PASSIVE LPF
-lpf = Passive_LPF(fs)
-out = np.zeros(len(delta))
+# #### PASSIVE LPF
+# lpf = Passive_LPF(fs,cutoff=1000)
+# out = np.zeros(len(delta))
+# print(f"lpf C1 C: {lpf.C1.C} F\nlpf C2 C: {lpf.C2.C} F")
 
-for i in range(len(delta)):
-  out[i] = lpf(delta[i])
+# for i in range(len(delta)):
+#   out[i] = lpf(delta[i])
 
-path = '/Users/gusanthon/Documents/UPF/Thesis/diode-clipper-wdf/spice/passive_LPF_1000hz.txt'
-compare_vs_spice(out,fs,path)
+# spice_path = '/Users/gusanthon/Documents/UPF/Thesis/diode-clipper-wdf/spice/passive_LPF_1000hz.txt'
+# compare_vs_spice(out,fs,spice_path)
 
 
 #### DIODE CLIPPER
-diode_clipper = Diode_clipper(fs,cutoff=1000,input_gain_db=0,output_gain_db=0,n_diodes=2)
+diode_clipper = Diode_clipper(fs,cutoff=1000,input_gain_db=30,output_gain_db=10,n_diodes=2)
+#
+# get frequency response
+out = np.zeros(len(delta))
 
-#get frequency response
 for i in range(len(delta)):
   out[i] = diode_clipper(delta[i])
 
-path = '/Users/gusanthon/Documents/UPF/Thesis/diode-clipper-wdf/spice/diode-clipper-frequency-analysis-1000hz.txt'
-compare_vs_spice(out,fs,path,title='diode clipper')
+spice_path = '/Users/gusanthon/Documents/UPF/Thesis/diode-clipper-wdf/spice/diode-clipper-frequency-analysis-1000hz.txt'
+compare_vs_spice(out,fs,spice_path,title='diode clipper')
 
-#sine wave analysis
+#
+# sine wave analysis
 out = np.zeros(len(sin))
+
 for i in range(len(sin)):
   out[i] = diode_clipper(sin[i])
 
-plt.plot(sin[:200],label='input')
-plt.plot(out[:200],label='output')
-plt.legend()
-plt.show()
+# plt.plot(sin[:100],label='input')
+# plt.plot(out[:100],label='output')
+# plt.legend()
+# plt.show()
 
-plot_fft(out,fs)
+compare_plot(sin,out,200)
+
+plot_fft(out,fs,title='diode clipper output spectrum')

@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.stats
+from utils import omega4
 
 ##########################################################################################################################################
 ########### WDF ELEMENT CLASSES 
@@ -35,8 +36,11 @@ class root_wdf(base_wdf):
         base_wdf.__init__(self)
         self.next = None
 
-    def connect_to_parent(self, p):
+    def connectToParent(self,p):
         pass
+
+    def propogateImpedanceChange(self):
+        self.calcImpedance()
 
 ##########################################################################################################################################
 
@@ -320,24 +324,9 @@ class Diode(root_wdf):
         self.two_R_Is = 2 * self.next.Rp * self.Is
         self.R_Is_over_Vt = self.next.Rp * self.Is * self.one_over_Vt
         self.logR_Is_over_Vt = np.log(self.R_Is_over_Vt)
-    
-    def omega4(self,x):
-        x1 = -3.341459552768620
-        x2 = 8.0
-        a = -1.314293149877800e-3
-        b = 4.775931364975583e-2
-        c = 3.631952663804445e-1
-        d = 6.313183464296682e-1
-        if x < x1:
-            y = 0
-        elif x < x2:
-            y = d + x * (c + x * (b + x * a))
-        else:
-            y = x - np.log(x)
-        return y - (y - np.exp(x - y) / (y + 1))
 
     def propagate_reflected_wave(self):
-        self.b = self.a + self.two_R_Is - (2 * self.Vt) * self.omega4(self.logR_Is_over_Vt + self.a * self.one_over_Vt + self.R_Is_over_Vt)
+        self.b = self.a + self.two_R_Is - (2 * self.Vt) * omega4(self.logR_Is_over_Vt + self.a * self.one_over_Vt + self.R_Is_over_Vt)
         return self.b
 
 class Diode_pair(Diode):
@@ -347,7 +336,7 @@ class Diode_pair(Diode):
     def propagate_reflected_wave(self):
         lam = np.sign(self.a)
         lam_a_over_Vt = lam * self.a * self.one_over_Vt
-        self.b = self.a - (2 * self.Vt) * lam * (self.omega4(self.logR_Is_over_Vt + lam_a_over_Vt) - self.omega4(self.logR_Is_over_Vt - lam_a_over_Vt))
+        self.b = self.a - (2 * self.Vt) * lam * (omega4(self.logR_Is_over_Vt + lam_a_over_Vt) - omega4(self.logR_Is_over_Vt - lam_a_over_Vt))
         return self.b
 
 ##########################################################################################################################################
