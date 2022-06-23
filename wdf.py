@@ -39,6 +39,7 @@ class root_wdf(base_wdf):
     def connect_to_parent(self,p):
         raise Exception("Root elements cannot be connected to a parent")
 
+
 ##########################################################################################################################################
 
 class Resistor(base_wdf):
@@ -51,6 +52,7 @@ class Resistor(base_wdf):
         if self.Rp == new_R:
             return
         self.Rp = new_R
+        self.G = 1./self.Rp
         self.impedance_change()
 
     def calc_impedance(self):
@@ -175,12 +177,13 @@ class Series_adaptor(base_wdf):
         self.p1 = p1
         self.p2 = p2
         self.p1_reflect = 1
+        self.calc_impedance()
         p1.connect_to_parent(self)
         p2.connect_to_parent(self)
-        self.Rp = self.p1.Rp + self.p2.Rp
-        self.calc_impedance()
+
         
     def calc_impedance(self):
+        self.Rp = self.p1.Rp + self.p2.Rp
         self.G = 1./self.Rp
         self.p1_reflect = self.p1.Rp / self.Rp
 
