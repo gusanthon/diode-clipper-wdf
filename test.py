@@ -22,7 +22,7 @@ compare_vs_spice(out,fs,spice_path)
 
 
 #### DIODE CLIPPER
-diode_clipper = Diode_clipper(fs,cutoff=1000,input_gain_db=30,output_gain_db=2,n_diodes=2)
+diode_clipper = Diode_clipper(fs,cutoff=1000,input_gain_db=0,output_gain_db=0,n_diodes=2)
 #
 # get frequency response
 out = np.zeros(len(delta))
