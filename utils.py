@@ -55,11 +55,12 @@ def multiple_formatter(denominator=2, number=np.pi, latex='\pi'):
     return _multiple_formatter
 
 def plot_fft(audio,fs,title='output spectrum'):
+  _, ax = plt.subplots(1, 1, figsize= (10, 4))
   N = len(audio)
   w = scipy.signal.windows.hann((N))
   w_fft = scipy.fft.fft(w*audio)
   xf = scipy.fft.fftfreq(N, 1/fs)[:N//2]
-  plt.plot(xf, 2.0/N * np.abs(w_fft[0:N//2]),label='fft hann window')
+  ax.plot(xf, 2.0/N * np.abs(w_fft[0:N//2]),label='fft hann window')
   plt.title(title)
   plt.legend()
   plt.show()
@@ -73,8 +74,9 @@ def freqz(x,fs):
 
 def plot_magnitude_response(f,H,label='magnitude',c='b',title=''):
     ax = plt.subplot(111)
+    # _, ax = plt.subplots(1, 1, figsize= (10, 4))
     # magnitude response
-    plt.plot(f,H,label=label,color=c)
+    ax.plot(f,H,label=label,color=c)
     ax.semilogx(f, H)
     plt.ylabel('Amplitude [dB]')
     plt.xlabel('Frequency [hz]')
