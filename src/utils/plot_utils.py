@@ -2,6 +2,7 @@ import scipy.signal
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.metrics import mean_squared_error
 
 
 def multiple_formatter(denominator=2, number=np.pi, latex="\pi"):
@@ -47,24 +48,22 @@ def plot_fft(audio, fs, title="output spectrum"):
     plt.show()
 
 
-
-def plot_magnitude_response(f, H, label="magnitude", c="b", title=""):
+def plot_magnitude_response(f, H, label="magnitude", c="tab:blue", title=""):
 
     ax = plt.subplot(111)
-    ax.plot(f, H, label=label, color=c)
-    ax.semilogx(f, H)
+    ax.plot(f, H)
+    ax.semilogx(f, H, label=label, color=c)
     plt.ylabel("Amplitude [dB]")
     plt.xlabel("Frequency [hz]")
     plt.title(title + "Magnitude response")
 
 
-
 def plot_phase_response(
-    f, angles, mult_locater=(np.pi / 2), denom=2, label="phase", c="b", title=""
+    f, angles, mult_locater=(np.pi / 2), denom=2, label="phase", c="tab:blue", title=""
 ):
     ax = plt.subplot(111)
-    plt.plot(f, angles, label=label, color=c)
-    ax.semilogx(f, angles)
+    plt.plot(f, angles)
+    ax.semilogx(f, angles, label=label, color=c)
     plt.ylabel("Angle [radians]")
     plt.xlabel("Frequency [hz]")
     plt.title(title + "Phase response")
@@ -84,7 +83,6 @@ def plot_bode(x, fs):
     plt.show()
 
 
-
 def plot_ltspice_bode(filename, mult_locater=(np.pi / 2), denom=2):
 
     f, H_db, angles = ltspice_freqz(filename)
@@ -95,30 +93,31 @@ def plot_ltspice_bode(filename, mult_locater=(np.pi / 2), denom=2):
     plt.show()
 
 
-
-def compare_vs_spice(x, fs, spicepath, mult_locater=(np.pi / 2), denom=2, title=""):
+def compare_freqz_vs_spice(
+    x, fs, spicepath, mult_locater=(np.pi / 2), denom=2, title=""
+):
     wdf_f, wdf_H, wdf_angles = freqz(x, fs)
     spice_f, spice_H, spice_angles = ltspice_freqz(spicepath)
-    plot_magnitude_response(wdf_f, wdf_H, label="wdf")
+    plot_magnitude_response(wdf_f, wdf_H, label="wdf", c="tab:blue")
     plot_magnitude_response(
-        spice_f, spice_H, label="spice", c="orange", title=title + " "
+        spice_f, spice_H, label="spice", c="tab:orange", title=title + " "
     )
     plt.legend()
     plt.show()
 
-    plot_phase_response(wdf_f, wdf_angles, label="wdf")
+    plot_phase_response(wdf_f, wdf_angles, label="wdf", c="tab:blue")
     plot_phase_response(
         spice_f,
         spice_angles,
         label="spice",
         mult_locater=mult_locater,
         denom=denom,
-        c="orange",
+        c="tab:orange",
         title=title + " ",
     )
     plt.legend()
     plt.show()
-
+    # return mean_squared_error(spice_H,wdf_H),mean_squared_error(spice_angles,wdf_angles)
 
 
 def plot_freqz(x: np.ndarray, fs: int, title: str = "Frequency response"):
@@ -153,9 +152,7 @@ def plot_freqz(x: np.ndarray, fs: int, title: str = "Frequency response"):
     plt.show()
 
 
-
-
-def compare_plot(x, y, out_idx, title="", x_label="input", y_label="output"):
+def compare_waveforms(x, y, out_idx, title="", x_label="input", y_label="output"):
     _, ax = plt.subplots(1, 1, figsize=(10, 4))
     ax.plot(x[:out_idx], label=x_label)
     ax.plot(y[:out_idx], label=y_label)
@@ -173,10 +170,8 @@ def freqz(x, fs):
     return f, H, angles
 
 
-
 def ltspice_freqz(filename, out_label="V(vout)"):
     def imag_to_mag(z):
-        # Returns the maginude of an imaginary number.
         a, b = map(float, z.split(","))
         return 20 * np.log10(np.sqrt(a * a + b * b))
 
@@ -191,3 +186,49 @@ def ltspice_freqz(filename, out_label="V(vout)"):
     H_db = np.array(x["H_dB"])
     angles = np.array(x["Phase"])
     return f, H_db, angles
+
+
+def get_freqz_error_vs_spice(x,fs,spice_path,error='mse'):
+
+    wdf_f, wdf_H, wdf_angles = freqz(x, fs)
+    spice_f, spice_H, spice_angles = ltspice_freqz(spice_path)
+
+    wdf_magnitude = dict(zip(wdf_f, wdf_H))
+    wdf_phase = dict(zip(wdf_f, wdf_angles))
+
+    pred_mag = np.zeros(len(spice_f))
+    true_mag = np.zeros(len(spice_f))
+    pred_phase = np.zeros(len(spice_f))
+    true_phase = np.zeros(len(spice_f))
+    pred_f = np.zeros(len(spice_f))
+    true_f = np.zeros(len(spice_f))
+    
+    def get_closest(d, search_key):
+        if not d.get(search_key):
+            key = min(d.keys(), key=lambda key: abs(key - search_key))
+            return key, d[key]
+        return search_key, d[search_key]
+
+    for i in range(len(spice_f)):
+        # find nearest frequencies
+        closest, mag_val = get_closest(wdf_magnitude, spice_f[i])
+        phase_val = get_closest(wdf_phase, spice_f[i])[1]
+        pred_mag[i] = mag_val
+        true_mag[i] = spice_H[i]
+        pred_phase[i] = phase_val
+        true_phase[i] = spice_angles[i]
+        pred_f[i] = closest
+        true_f[i]= spice_f[i]
+    if error == 'mse':
+        return (
+            mean_squared_error(true_mag,pred_mag),
+            mean_squared_error(true_phase,pred_phase),
+            mean_squared_error(true_f,pred_f)
+        )
+    elif error == 'euclidean':
+        return (
+            np.linalg.norm(true_mag-pred_mag),
+            np.linalg.norm(true_phase-pred_phase),
+            np.linalg.norm(true_f-pred_f)
+        )
+    
