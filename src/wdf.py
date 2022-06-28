@@ -25,6 +25,9 @@ class baseWDF:
     def wave_to_voltage(self):
         return (self.a + self.b) / 2.0
 
+    def reset(self):
+        self.a, self.b = 0, 0
+
     def calc_impedance(self):
         pass
 
@@ -32,8 +35,7 @@ class baseWDF:
         pass
 
     def __str__(self):
-        return '{0}({1}'.format(self.__class__.__name__, self.__dict__)
-
+        return "{0}({1}".format(self.__class__.__name__, self.__dict__)
 
 
 class rootWDF(baseWDF):
@@ -176,9 +178,9 @@ class ParallelAdaptor(baseWDF):
         self.a = a
 
     def propagate_reflected_wave(self):
-        self.p1.propagate_reflected_wave()
-        self.p2.propagate_reflected_wave()
-        self.b_diff = self.p2.b - self.p1.b
+        self.b_diff = (
+            self.p2.propagate_reflected_wave() - self.p1.propagate_reflected_wave()
+        )
         self.b_temp = -self.p1_reflect * self.b_diff
         self.b = self.p2.b + self.b_temp
         return self.b
@@ -365,8 +367,8 @@ class Diode(rootWDF):
             )
         )
         return self.b
-        
-    def omega4(self,x):
+
+    def omega4(self, x):
         """
         4th order approximation of Wright Omega function
         """
@@ -397,4 +399,3 @@ class DiodePair(Diode):
             - self.omega4(self.logR_Is_over_Vt - lam_a_over_Vt)
         )
         return self.b
-
