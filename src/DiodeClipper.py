@@ -1,3 +1,4 @@
+from utils.eval_utils import gen_test_wave
 from wdf import (
     Resistor,
     ResistiveVoltageSource,
@@ -83,4 +84,6 @@ class DiodeClipper:
         self.set_output_gain(self.def_out_gain)
         self.set_cutoff(self.def_cutoff)
 
-
+    def get_freq_response(self,delta_dur=1):
+        delta = gen_test_wave(self.fs,None,1,delta_dur,'delta')
+        return self.process_signal(delta)

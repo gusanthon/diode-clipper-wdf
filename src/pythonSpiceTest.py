@@ -36,7 +36,7 @@ for gain in gains:
         f"Diode Clipper THDN with {gain} dB input gain: {round(100 * THDN(out,fs),5)} %\n\n~~~~~~~"
     )
     Clipper.reset()
-    compare_waveforms(sin,out,200)   
+    # compare_waveforms(sin,out,200)   
 
 
 ############################################################################################
@@ -46,7 +46,7 @@ for gain in gains:
 error = 'mse' # 'euclidean'
 for cutoff in cutoffs:
     Clipper.set_cutoff(cutoff)
-    freq_response = Clipper(delta)
+    freq_response = Clipper.get_freq_response()
     spice_path = spice_dir / f"diode-clipper-frequency-analysis-{cutoff}hz.txt"
     compare_freqz_vs_spice(freq_response,fs,spice_path,title=f'diode clipper cutoff = {cutoff} hz')
     m,p,f = get_freqz_error_vs_spice(freq_response,fs,spice_path,error=error)
@@ -65,7 +65,7 @@ Lpf = PassiveLPF.PassiveLPF(fs)
 error = 'mse' # 'euclidean'
 for cutoff in cutoffs:
     Lpf.set_cutoff(cutoff)
-    freq_response = Lpf(delta)
+    freq_response = Lpf.get_freq_response()
     spice_path = spice_dir / f"passive-LPF-frequency-analysis-{cutoff}hz.txt"
     # compare_freqz_vs_spice(freq_response,fs,spice_path,title = f"passive LPF cutoff = {cutoff} hz")
     m,p,f = get_freqz_error_vs_spice(freq_response,fs,spice_path,error=error)

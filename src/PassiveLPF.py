@@ -1,3 +1,4 @@
+from utils.eval_utils import gen_test_wave
 from wdf import Resistor, Capacitor, SeriesAdaptor, ParallelAdaptor, IdealVoltageSource
 import numpy as np
 
@@ -57,6 +58,10 @@ class PassiveLPF:
     def reset(self):
         [element.reset() for element in self.elements()]
         self.set_cutoff(self.def_cutoff)
+
+    def get_freq_response(self,delta_dur=1):
+        delta = gen_test_wave(self.fs,None,1,delta_dur,'delta')
+        return self.process_signal(delta)
 
     def __str__(self):
         return "{0}({1}".format(self.__class__.__name__, self.__dict__)
