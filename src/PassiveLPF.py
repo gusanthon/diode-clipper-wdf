@@ -73,9 +73,7 @@ class PassiveLPF:
         self.C2.prepare(self.fs)
 
     def __str__(self):
-        return "{0}({1})".format(self.__class__.__name__, self.__dict__)
-
-
+        return f"{self.__class__.__name__}, ({self.__dict__})"
 
     def record_mono_audio(
         self, duration, chunk=1024, file_name_input="", file_name_output="", callback = None
@@ -89,6 +87,7 @@ class PassiveLPF:
             input=True,
             frames_per_buffer=chunk,
         )
+
         player = p.open(
             format=paFloat32,
             channels=1,

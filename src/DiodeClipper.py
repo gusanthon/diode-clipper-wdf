@@ -102,6 +102,12 @@ class DiodeClipper:
     def record_mono_audio(
         self, duration, chunk=1024, file_name_input="", file_name_output="", callback = None
     ):
+        """
+        record audio in mono for duration seconds, block size = chunk,
+        save input file or output file by passing names as strings
+        to params, optional callback function to be executed after
+        audio is processed, before written to out buffer
+        """
 
         p = PyAudio()
         stream = p.open(
@@ -111,6 +117,7 @@ class DiodeClipper:
             input=True,
             frames_per_buffer=chunk,
         )
+
         player = p.open(
             format=paFloat32,
             channels=1,
