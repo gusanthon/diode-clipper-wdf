@@ -133,18 +133,17 @@ class DiodeClipper:
             for j in range(len(data)):
 
                 processed[j] = self.process_sample(data[j])
-                # wet[idx] = processed[j]
-                # dry[idx] = data[j]
-                # idx += 1
+                wet[idx] = processed[j]
+                dry[idx] = data[j]
+                idx += 1
 
-                # if callback:
-                #     callback(self)
+                if callback:
+                    callback(self)
 
             player.write(processed, chunk)
             end = time.time()
             t = round((end - start) * 1000,5) 
             times[i] = t
-            # print(f'time elapsed in chunk : {t} ms\n') 
 
         stream.stop_stream()
         stream.close()
