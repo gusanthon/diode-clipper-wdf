@@ -1,36 +1,77 @@
 import scipy
 import numpy as np
 import pandas as pd
-import signal_generator as sg
-
+import matplotlib.pyplot as plt
 from scipy.signal.windows import general_cosine
 from scipy.fftpack import next_fast_len
 from numpy.fft import rfft, irfft
-from numpy import argmax, mean, log, concatenate, zeros
-import numpy as np
+from numpy import argmax, mean, concatenate, zeros
+
 
 
 def gen_test_wave(fs, f, amp, t, kind):
-    N = int(t * fs)
-    n = np.arange(0, N / fs, 1 / fs)
+
     if kind == "sin":
+        N = int(t * fs)
+        n = np.arange(0, N, 1 / fs)
         x = np.sin(2 * np.pi * f * n) * amp
     elif kind == "cos":
+        N = int(t * fs)
+        n = np.arange(0, N, 1 / fs)
         x = np.cos(2 * np.pi * f * n) * amp
     elif kind == "delta":
+        N = int(t * fs)
         x = np.zeros(N)
         x[0] = amp
     elif kind == 'log_sweep':
-        sweep_generator = sg.SignalGenerator(
-            "log_sweep",
-            t,
-            amplitude=amp,
-            sampleRate=fs,
-        )
-        x = sweep_generator()
+        x = sweep_tone(fs,t,amp)
+    elif kind == 'inv_sweep':
+        x = sweep_tone(fs,t,amp,inverse=True)
 
     return x
 
+def sweep_tone(
+    sample_rate: int,
+    duration: float,
+    amplitude: float,
+    f1: float = 20,
+    f2: float = 20000,
+    fade_duration: float = 0.0,
+    inverse: bool = False,
+    ) -> np.ndarray:
+    """
+    Generate a sweep tone signal with specific parameters.
+
+    Args:
+        sample_rate (int): Sample rate
+        duration (float): Duration of the sweep
+        amplitude (float): Amplitude of the sweep
+        f1 (float): Start frequency. Defaults to 20Hz
+        f2 (float, optional): End frequency. Defaults to 20k.
+        fade_duration (float, optional): Fade in and fade out duration. Defaults to 0.0s.
+        inverse: (bool, optional): Generate sweep inverse filter. False
+    """
+
+    R = np.log(f2 / f1)
+    t = np.arange(0, duration, 1.0 / sample_rate)
+    output = np.sin((2.0 * np.pi * f1 * duration / R) * (np.exp(t * R / duration) - 1))
+    if inverse:
+        k = np.exp(t * R / duration)
+        output = output[::-1] / k
+    if fade_duration:
+        if 2 * fade_duration < duration:
+            fade_frequency = 1.0 / fade_duration / 4.0
+            fade_window = np.sine(sample_rate, fade_duration, 1, frequency=fade_frequency)
+            output[: len(fade_window)] = output[: len(fade_window)] * fade_window
+            output[-len(fade_window) :] = (
+                output[-len(fade_window) :] * fade_window[::-1]
+            )
+        else:
+            print(
+                "WARNING: fading was not applied. The fade duration is longer than the signal length."
+                )
+    return amplitude * output
+    
 
 def read_to_linear(path, bd, lin=0):
     fs, x = scipy.io.wavfile.read(path)
@@ -48,19 +89,38 @@ def read_ltspice_file(filename, out_label="V(vout)"):
     return x[out_label]
 
 ## spice command helpers
+
 cutoffs = [70, 150, 250, 500, 1000, 2000, 4000, 8000, 16000]
+sample_rates = [44100, 48000, 88200, 96000, 176400, 192000]
+rates_khz = {22050: 22.05,24000:24,44100: 44.1, 48000: 48, 88200: 88.2, 96000: 96, 176400: 176.4, 192000: 192}
 
 def get_C_from_cutoff(f):
     Z = 800 # for passive lpf
     return (1 / Z) / (2.0 * np.pi * f)
-# [print(f"cutoff - {cutoff} hz : {get_R_from_cutoff(cutoff)} [Ohm]\n") for cutoff in cutoffs]
+# [print(f"cutoff - {cutoff} hz : {get_C_from_cutoff(cutoff)} [F]\n") for cutoff in cutoffs]
 
 def get_R_from_cutoff(f):
     C = 47e-9 # for diode clipper
     return 1 / (2 * np.pi * C * f)
-# [print(f"cutoff - {cutoff} hz : {get_C_from_cutoff(cutoff)} [F]\n") for cutoff in cutoffs]
+# [print(f"cutoff - {cutoff} hz : {get_R_from_cutoff(cutoff)} [Ohm]\n") for cutoff in cutoffs]
+
+# [print(f"For sample rate {fs} :\n.ac oct 100 .01 {rates_khz[fs/2]}k\n~~~") for fs in sample_rates]
 
 
+def signalPower(x):
+    return np.average(x**2)
+
+def SNR(signal, noise):
+    powS = signalPower(signal)
+    powN = signalPower(noise)
+    return 10*np.log10((powS-powN)/powN)
+
+def SNRsystem(inputSig, outputSig):
+    noise = outputSig-inputSig
+    
+    powS = signalPower(outputSig)
+    powN = signalPower(noise)
+    return 10*np.log10((powS-powN)/powN)
 
 def rms_flat(a):
     """
@@ -165,3 +225,4 @@ def THDN(signal, fs, weight=None):
 
     # TODO: Return a dict or list of frequency, THD+N?
     return rms_flat(noise) / total_rms
+
