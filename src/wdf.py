@@ -35,7 +35,7 @@ class baseWDF:
         pass
 
     def __str__(self):
-        return "{0}({1}".format(self.__class__.__name__, self.__dict__)
+        return f"{self.__class__.__name__}, ({self.__dict__})"
 
 
 class rootWDF(baseWDF):
@@ -371,6 +371,7 @@ class Diode(rootWDF):
     def omega4(self, x):
         """
         4th order approximation of Wright Omega function
+        y = 3rd order approx, is used in calculation of 4th
         """
         x1 = -3.341459552768620
         x2 = 8.0
