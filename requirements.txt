@@ -3,4 +3,4 @@ matplotlib
 numpy
 pandas
 scipy
-sympy
+pyaudio
