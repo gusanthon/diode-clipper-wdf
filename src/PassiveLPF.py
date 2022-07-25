@@ -1,7 +1,9 @@
 from utils.eval_utils import gen_test_wave
 from wdf import Resistor, Capacitor, SeriesAdaptor, ParallelAdaptor, IdealVoltageSource
 import numpy as np
-
+from pyaudio import PyAudio, paFloat32
+import scipy.io.wavfile
+import time
 
 class PassiveLPF:
     def __init__(self, sample_rate, cutoff=1000) -> None:
@@ -23,7 +25,7 @@ class PassiveLPF:
         self.S2 = SeriesAdaptor(self.R1, self.P1)
 
         self.Vs = IdealVoltageSource(self.P1)
-
+        
         self.elements = [
             self.R1,
             self.R2,
@@ -40,13 +42,14 @@ class PassiveLPF:
         self.S2.accept_incident_wave(self.Vs.propagate_reflected_wave())
         return self.C2.wave_to_voltage()
 
-    def process_signal(self,signal):
+    def process_signal(self, signal):
+        self.reset()
         return np.array([self.process_sample(sample) for sample in signal])
 
     def __call__(self, *args: any, **kwds: any) -> any:
         if isinstance(args[0], float) or isinstance(args[0], int):
             return self.process_sample(args[0])
-        elif hasattr(args[0],'__iter__'):
+        elif hasattr(args[0], "__iter__"):
             return self.process_signal(args[0])
 
     def set_cutoff(self, new_cutoff):
@@ -59,10 +62,78 @@ class PassiveLPF:
         [element.reset() for element in self.elements()]
         self.set_cutoff(self.def_cutoff)
 
-    def get_freq_response(self,delta_dur=1):
-        delta = gen_test_wave(self.fs,None,1,delta_dur,'delta')
-        return self.process_signal(delta)
+    def get_freq_response(self, amp=1, delta_dur=1):
+        return self.process_signal(
+            gen_test_wave(self.fs, None, amp, delta_dur, "delta")
+        )
+
+    def set_sample_rate(self, fs):
+        self.fs = fs
+        self.C1.prepare(self.fs)
+        self.C2.prepare(self.fs)
 
     def __str__(self):
-        return "{0}({1}".format(self.__class__.__name__, self.__dict__)
+        return "{0}({1})".format(self.__class__.__name__, self.__dict__)
 
+
+
+    def record_mono_audio(
+        self, duration, chunk=1024, file_name_input="", file_name_output="", callback = None
+    ):
+
+        p = PyAudio()
+        stream = p.open(
+            format=paFloat32,
+            channels=1,
+            rate=self.fs,
+            input=True,
+            frames_per_buffer=chunk,
+        )
+        player = p.open(
+            format=paFloat32,
+            channels=1,
+            rate=self.fs,
+            output=True,
+            frames_per_buffer=chunk,
+        )
+
+        wet = np.zeros(duration * self.fs,dtype=np.float32)
+        dry = np.zeros(duration * self.fs,dtype=np.float32)
+        times = np.zeros(int(duration * self.fs / chunk))
+        idx = 0
+
+        for i in range(int(duration * self.fs / chunk)):
+            start = time.time()
+
+            data = np.frombuffer(stream.read(chunk), dtype=np.float32)
+            processed = np.zeros(len(data),dtype=np.float32)
+
+            for j in range(len(data)):
+
+                processed[j] = self.process_sample(data[j])
+                wet[idx] = processed[j]
+                dry[idx] = data[j]
+                idx += 1
+
+                if callback:
+                    callback(self)
+
+            player.write(processed, chunk)
+            end = time.time()
+            t = round((end - start) * 1000,5) 
+            times[i] = t
+
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+        print(f'AVG time between reading from in buffer to writing to out buffer :\n {np.average(times)} ms\n')
+
+        dry = np.array(dry, dtype=np.float32)
+        wet = np.array(wet, dtype=np.float32)
+
+        if file_name_input:
+            scipy.io.wavfile.write(file_name_input, self.fs, dry)
+        if file_name_output:
+            scipy.io.wavfile.write(file_name_output, self.fs, wet)
+
+        return wet, dry 
