@@ -11,16 +11,14 @@ from numpy import argmax, mean, concatenate, zeros
 
 def gen_test_wave(fs, f, amp, t, kind):
 
+    N = int(t * fs)
     if kind == "sin":
-        N = int(t * fs)
-        n = np.arange(0, N, 1 / fs)
+        n = np.arange(0,N/fs,1/fs)
         x = np.sin(2 * np.pi * f * n) * amp
     elif kind == "cos":
-        N = int(t * fs)
-        n = np.arange(0, N, 1 / fs)
+        n = np.arange(0,N/fs,1/fs)
         x = np.cos(2 * np.pi * f * n) * amp
     elif kind == "delta":
-        N = int(t * fs)
         x = np.zeros(N)
         x[0] = amp
     elif kind == 'log_sweep':
