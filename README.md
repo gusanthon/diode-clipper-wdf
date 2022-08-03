@@ -1,6 +1,6 @@
 
 
-# Evaluating the Nonlinearities of a Diode Clipper Circuit based on Wave Digital Filters
+# Evaluating the Nonlinearities of a Diode Clipper Circuit Based on Wave Digital Filters
 
 Diode Clipper circuit & others are built with elements from wave digital filter library in wdf.py
 
