@@ -25,6 +25,9 @@ class baseWDF:
     def wave_to_voltage(self):
         return (self.a + self.b) / 2.0
 
+    def wave_to_current(self):
+        return (self.a - self.b) * (.5 * self.G)
+
     def reset(self):
         self.a, self.b = 0, 0
 
@@ -57,11 +60,10 @@ class Resistor(baseWDF):
         self.calc_impedance()
 
     def set_resistance(self, new_R):
-        if self.Rp == new_R:
-            return
-        self.Rp = new_R
-        self.G = 1.0 / self.Rp
-        self.impedance_change()
+        if not self.Rp == new_R:
+            self.Rp = new_R
+            self.G = 1.0 / self.Rp
+            self.impedance_change()
 
     def calc_impedance(self):
         self.G = 1.0 / self.Rp
@@ -93,10 +95,9 @@ class Capacitor(baseWDF):
         self.reset()
 
     def set_capacitance(self, new_C):
-        if self.C == new_C:
-            return
-        self.C = new_C
-        self.impedance_change()
+        if not self.C == new_C:
+            self.C = new_C
+            self.impedance_change()
 
     def calc_impedance(self):
         self.Rp = 1.0 / (2 * self.C * self.fs)
@@ -130,10 +131,9 @@ class Inductor(baseWDF):
         self.reset()
 
     def set_inductance(self, new_L):
-        if self.L == new_L:
-            return
-        self.L = new_L
-        self.impedance_change()
+        if not self.L == new_L:
+            self.L = new_L
+            self.impedance_change()
 
     def calc_impedance(self):
         self.Rp = 2 * self.L * self.fs
@@ -249,9 +249,6 @@ class IdealVoltageSource(rootWDF):
         self.Vs = 0
         self.calc_impedance()
 
-    def calc_impedance(self):
-        pass
-
     def set_voltage(self, new_V):
         self.Vs = new_V
 
@@ -271,10 +268,9 @@ class ResistiveVoltageSource(baseWDF):
         self.calc_impedance()
 
     def set_resistance(self, new_R):
-        if self.Rval == new_R:
-            return
-        self.Rval = new_R
-        self.impedance_change()
+        if not self.Rval == new_R:
+            self.Rval = new_R
+            self.impedance_change()
 
     def calc_impedance(self):
         self.Rp = self.Rval
@@ -307,6 +303,9 @@ class IdealCurrentSource(rootWDF):
         self.b = self.two_R_Is + self.a
         return self.b
 
+    def set_current(self,new_Is):
+        self.Is = new_Is
+
 
 ##########################################################################################################################################
 
@@ -319,10 +318,9 @@ class ResistiveCurrentSource(baseWDF):
         self.calc_impedance()
 
     def set_resistance(self, new_R):
-        if self.Rval == new_R:
-            return
-        self.Rval = new_R
-        self.impedance_change()
+        if not self.Rval == new_R:
+            self.Rval = new_R
+            self.impedance_change()
 
     def calc_impedance(self):
         self.Rp = self.Rval
@@ -348,12 +346,19 @@ class Diode(rootWDF):
 
     def set_diode_params(self, Is, Vt, n_diodes):
         self.Is = Is
+        self.n_diodes = n_diodes
         self.Vt = Vt * n_diodes
-        self.one_over_Vt = 1.0 / self.Vt
+        self.one_over_Vt = 1. / self.Vt
+        self.calc_impedance()
+
+    def set_n_diodes(self,n_diodes,Vt=25.85e-3):
+        self.n_diodes = n_diodes
+        self.Vt = Vt * n_diodes
+        self.one_over_Vt = 1./self.Vt
         self.calc_impedance()
 
     def calc_impedance(self):
-        self.two_R_Is = 2 * self.next.Rp * self.Is
+        self.two_R_Is = 2. * self.next.Rp * self.Is
         self.R_Is_over_Vt = self.next.Rp * self.Is * self.one_over_Vt
         self.logR_Is_over_Vt = np.log(self.R_Is_over_Vt)
 
@@ -361,7 +366,7 @@ class Diode(rootWDF):
         self.b = (
             self.a
             + self.two_R_Is
-            - (2 * self.Vt)
+            - (2. * self.Vt)
             * self.omega4(
                 self.logR_Is_over_Vt + self.a * self.one_over_Vt + self.R_Is_over_Vt
             )
