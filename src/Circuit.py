@@ -6,7 +6,7 @@ import scipy.io.wavfile
 from wdf import *
 import time
 from Rtype import RTypeAdaptor, RootRTypeAdaptor
-# from pyaudio import PyAudio, paFloat32
+from pyaudio import PyAudio, paFloat32
 
 class Circuit:
 
@@ -571,7 +571,7 @@ beq = BaxandallEQ(48000,0,.25,False)
 # beq.set_treble(1)
 beq.set_bass(1)
 beq.set_treble(1)
-beq.plot_freqz()
+# beq.plot_freqz()
 # plot_freqz(beq.get_impulse_response(),beq.fs)
 # lpf = PassiveLPF(96000,1000)
 # y = lpf(x)
