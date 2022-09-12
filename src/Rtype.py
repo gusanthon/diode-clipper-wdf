@@ -13,12 +13,13 @@ class RTypeAdaptor(baseWDF):
             self.n_ports = len(down_ports) 
 
         self.down_ports = down_ports
-        self.S_matrix = [[0 for x in range(self.n_ports)] for y in range(self.n_ports)]
         self.impedance_calc = impedance_calc
+        self.S_matrix = np.zeros((self.n_ports,self.n_ports))
         self.a_vals = np.zeros(self.n_ports)
         self.b_vals = np.zeros(self.n_ports)
 
-        [port.connect_to_parent(self) for port in self.down_ports]
+        for port in self.down_ports:
+            port.connect_to_parent(self)
 
         self.calc_impedance()
 
