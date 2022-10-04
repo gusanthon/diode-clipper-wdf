@@ -11,7 +11,7 @@ import scipy.io.wavfile
 from wdf import *
 import time
 from Rtype import RTypeAdaptor, RootRTypeAdaptor
-# from pyaudio import PyAudio, paFloat32
+from pyaudio import PyAudio, paFloat32
 
 class Circuit:
 
@@ -59,73 +59,73 @@ class Circuit:
     def impedance_calc(self, R):
         pass
 
-    # def record_mono_audio(
-    #         self, duration, chunk=1024, file_name_input="", file_name_output="", callback=None
-    # ):
-    #     """
-    #     record audio in mono for duration seconds, block size = chunk,
-    #     save input file or output file by passing names as strings
-    #     to params, optional callback function to be executed after
-    #     audio is processed, before written to out buffer
-    #     """
+    def record_mono_audio(
+            self, duration, chunk=1024, file_name_input="", file_name_output="", callback=None
+    ):
+        """
+        record audio in mono for duration seconds, block size = chunk,
+        save input file or output file by passing names as strings
+        to params, optional callback function to be executed after
+        audio is processed, before written to out buffer
+        """
 
-    #     p = PyAudio()
-    #     stream = p.open(
-    #         format=paFloat32,
-    #         channels=1,
-    #         rate=self.fs,
-    #         input=True,
-    #         frames_per_buffer=chunk,
-    #     )
+        p = PyAudio()
+        stream = p.open(
+            format=paFloat32,
+            channels=1,
+            rate=self.fs,
+            input=True,
+            frames_per_buffer=chunk,
+        )
 
-    #     player = p.open(
-    #         format=paFloat32,
-    #         channels=1,
-    #         rate=self.fs,
-    #         output=True,
-    #         frames_per_buffer=chunk,
-    #     )
+        player = p.open(
+            format=paFloat32,
+            channels=1,
+            rate=self.fs,
+            output=True,
+            frames_per_buffer=chunk,
+        )
 
-    #     wet = np.zeros(duration * self.fs, dtype=np.float32)
-    #     dry = np.zeros(duration * self.fs, dtype=np.float32)
-    #     times = np.zeros(int(duration * self.fs / chunk))
-    #     idx = 0
+        wet = np.zeros(duration * self.fs, dtype=np.float32)
+        dry = np.zeros(duration * self.fs, dtype=np.float32)
+        times = np.zeros(int(duration * self.fs / chunk))
+        idx = 0
 
-    #     for i in range(int(duration * self.fs / chunk)):
-    #         start = time.time()
+        for i in range(int(duration * self.fs / chunk)):
+            start = time.time()
 
-    #         data = np.frombuffer(stream.read(chunk, exception_on_overflow=False), dtype=np.float32)
-    #         processed = np.zeros(len(data), dtype=np.float32)
+            data = np.frombuffer(stream.read(chunk, exception_on_overflow=False), dtype=np.float32)
+            processed = np.zeros(len(data), dtype=np.float32)
 
-    #         for j in range(len(data)):
+            for j in range(len(data)):
 
-    #             processed[j] = self.process_sample(data[j])
-    #             wet[idx] = processed[j]
-    #             dry[idx] = data[j]
-    #             idx += 1
+                processed[j] = self.process_sample(data[j])
+                wet[idx] = processed[j]
+                dry[idx] = data[j]
+                idx += 1
 
-    #             if callback:
-    #                 callback(self)
+                if callback:
+                    callback(self)
 
-    #         player.write(processed, chunk)
-    #         end = time.time()
-    #         t = round((end - start) * 1000, 5)
-    #         times[i] = t
+            player.write(processed, chunk)
+            end = time.time()
+            t = round((end - start) * 1000, 5)
+            times[i] = t
 
-    #     stream.stop_stream()
-    #     stream.close()
-    #     p.terminate()
-    #     print(
-    #         f'AVG time taken to read from input buffer, process audio and write to output buffer :\n {np.average(times)} ms\n')
-    #     dry = np.array(dry, dtype=np.float32)
-    #     wet = np.array(wet, dtype=np.float32)
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+        print(
+            f'AVG time taken to read from input buffer, process audio and write to output buffer :\n {np.average(times)} ms\n')
+        dry = np.array(dry, dtype=np.float32)
+        wet = np.array(wet, dtype=np.float32)
 
-    #     if file_name_input:
-    #         scipy.io.wavfile.write(file_name_input, self.fs, dry)
-    #     if file_name_output:
-    #         scipy.io.wavfile.write(file_name_output, self.fs, wet)
+        if file_name_input:
+            scipy.io.wavfile.write(file_name_input, self.fs, dry)
+        if file_name_output:
+            scipy.io.wavfile.write(file_name_output, self.fs, wet)
 
-    #     return wet, dry
+        return wet, dry
 
 
 class CurrentDivider(Circuit):
