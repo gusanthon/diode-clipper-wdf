@@ -8,7 +8,7 @@ Based on Jatin Chowdhury's C++ wdf library: https://github.com/jatinchowdhury18/
 
 Diode Clipper circuit & others in examples directory are built with elements from wave digital filter library in wdf.py
 
-Working on generalizing circuit behavior of wdf's with Circuit.py, a class from which any wave digital circuit built using this library may inherit basic circuit functionalities.
+Working on generalizing circuit behavior of wdf's with Circuit.py, a class from which any wave digital circuit built using this library may inherit basic functionalities.
 
 ## Usage
 
