@@ -2,14 +2,18 @@
 
 # Evaluating the Nonlinearities of a Diode Clipper Circuit Based on Wave Digital Filters
 
-Diode Clipper circuit & others are built with elements from wave digital filter library in wdf.py
+Paper: https://zenodo.org/record/7116075
 
-Working on generalizing circuit behavior of wdf's with Circuit.py
+Based on Jatin Chowdhury's C++ wdf library: https://github.com/jatinchowdhury18/WaveDigitalFilters
+
+Diode Clipper circuit & others in examples directory are built with elements from wave digital filter library in wdf.py
+
+Working on generalizing circuit behavior of wdf's with Circuit.py, a class from which any wave digital circuit built using this library may inherit basic circuit functionalities.
 
 ## Usage
 
 ```python
-from DiodeClipper import DiodeClipper
+from examples.DiodeClipper import DiodeClipper
 
 from utils.eval_utils import gen_test_wave
 
