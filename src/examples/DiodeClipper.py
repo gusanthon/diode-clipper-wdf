@@ -5,7 +5,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 
 from utils.eval_utils import gen_test_wave
-from utils.plot_utils import plot_freqz, plot_fft
+from utils.plot_utils import plot_freqz
 from wdf import (
     Resistor,
     ResistiveVoltageSource,
@@ -103,7 +103,7 @@ class DiodeClipper:
         self.fs = fs
         self.C1.prepare(self.fs)
 
-    def get_freq_response(self, amp=1, delta_dur=1):
+    def get_impulse_response(self, amp=1, delta_dur=1):
         return self.process_signal(
             gen_test_wave(self.fs, None, amp, delta_dur, "delta")
         )

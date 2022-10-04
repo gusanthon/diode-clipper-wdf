@@ -68,7 +68,7 @@ class PassiveLPF:
         [element.reset() for element in self.elements()]
         self.set_cutoff(self.def_cutoff)
 
-    def get_freq_response(self, amp=1, delta_dur=1):
+    def get_impulse_response(self, amp=1, delta_dur=1):
         return self.process_signal(
             gen_test_wave(self.fs, None, amp, delta_dur, "delta")
         )
