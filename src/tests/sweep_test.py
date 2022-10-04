@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils.eval_utils import gen_test_wave, rms_flat
 from utils.path_utils import data_dir
-from DiodeClipper import DiodeClipper
+# from examples.DiodeClipper import DiodeClipper
 from utils.plot_utils import freqz, plot_bode, plot_fft, plot_freqz, plot_magnitude_response
 import scipy
 
@@ -76,13 +76,13 @@ def get_closest(d, search_key):
     key = min(d.keys(), key=lambda key: abs(key - search_key))
     return key, d[key]
 
-with open(data_dir/"IR_out.json", "r") as f:
+with open(data_dir/"swept_sine/IR_out.json", "r") as f:
     IR_out = np.array(json.load(f))
 
-with open(data_dir/"TF_complete.json", "r") as file:
+with open(data_dir/"swept_sine/TF_complete.json", "r") as file:
     TF_complete = np.array(json.load(file))
 
-with open(data_dir/"IR_in.json", "r") as file:
+with open(data_dir/"swept_sine/IR_in.json", "r") as file:
     IR_in = np.array(json.load(file))
 
 # sin = gen_test_wave(fs, 1000, 1, 1, "sin")

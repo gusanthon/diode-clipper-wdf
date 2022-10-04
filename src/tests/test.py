@@ -8,8 +8,8 @@ from utils.path_utils import data_dir, src_dir
 from utils.plot_utils import compare_freqz_vs_spice, compare_waveforms, plot_fft
 from utils.eval_utils import gen_test_wave
 
-import PassiveLPF
-import DiodeClipper
+from examples.PassiveLPF import PassiveLPF
+from examples.DiodeClipper import DiodeClipper
 ##############
 # CIRCUIT CLASS TESTS
 #########

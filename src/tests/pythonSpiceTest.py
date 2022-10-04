@@ -11,7 +11,7 @@ from utils.plot_utils import (
     compare_waveforms,
 )
 from utils.path_utils import data_dir
-import DiodeClipper
+from examples.DiodeClipper import DiodeClipper
 # import PassiveLPF
 import json
 import os

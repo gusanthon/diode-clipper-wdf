@@ -3,11 +3,11 @@ import os
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-
+from utils.path_utils import data_dir
 import json
 import numpy as np
 
-with open('./ESR_clipper_data.json') as f:
+with open(data_dir/'frequency_response/ESR_clipper_data.json') as f:
     esr_data = json.load(f)
 
 print(esr_data)

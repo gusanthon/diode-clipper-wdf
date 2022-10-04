@@ -4,7 +4,7 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 
-from DiodeClipper import DiodeClipper
+from examples.DiodeClipper import DiodeClipper
 from utils.eval_utils import read_to_linear, gen_test_wave, SNRsystem
 import scipy.io.wavfile
 import numpy as np

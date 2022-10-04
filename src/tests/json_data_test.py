@@ -2,14 +2,14 @@ import sys
 import os
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-
+from utils.path_utils import data_dir
 
 import json
 import matplotlib.pyplot as plt
 
 
 with open(
-    "/Users/gusanthon/Documents/UPF/Thesis/diode-clipper-wdf/src/clipper_data.json", "r"
+    data_dir/"frequency_response/clipper_data.json", "r"
 ) as json_file:
     clipper_data = json.load(json_file)
 
