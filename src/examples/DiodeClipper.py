@@ -176,9 +176,6 @@ class DiodeClipper:
             f"AVG time taken to read from input buffer, process audio and write to output buffer :\n {np.average(times)} ms\n"
         )
 
-        dry = np.array(dry, dtype=np.float32)
-        wet = np.array(wet, dtype=np.float32)
-
         if file_name_input:
             scipy.io.wavfile.write(file_name_input, self.fs, dry)
         if file_name_output:

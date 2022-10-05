@@ -5,7 +5,7 @@ class RTypeAdaptor(baseWDF):
     def __init__(self, down_ports, impedance_calc, up_port_idx):
         baseWDF.__init__(self)
 
-        if up_port_idx:
+        if up_port_idx is not None:
             self.n_ports = len(down_ports) + 1
             self.up_port_idx = up_port_idx
 

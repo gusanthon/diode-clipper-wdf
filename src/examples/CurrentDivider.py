@@ -24,7 +24,7 @@ class CurrentDivider(Circuit):
             self.I1,
             self.Is,
         ]
-        [print(f"{el} : {el.a}\n") for el in elements]
+
         super().__init__(elements, self.Is, self.Is, self.R1)
 
     def process_sample(self, sample):
