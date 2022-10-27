@@ -19,11 +19,11 @@ from utils.eval_utils import gen_test_wave
 
 sin = gen_test_wave(fs = 44100, f = 1000, amp = 1, t = 1, kind = 'sin')
 
-Circuit = DiodeClipper(44100)
+circuit = DiodeClipper(44100)
 
-Circuit.set_input_gain(20)
+circuit.set_input_gain(20)
 
-output = Circuit(sin)
+output = circuit(sin)
 
-Circuit.plot_freqz()
+circuit.plot_freqz()
 ```
