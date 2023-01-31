@@ -2,6 +2,8 @@
 
 # Evaluating the Nonlinearities of a Diode Clipper Circuit Based on Wave Digital Filters
 
+Check out [pywdf](https://github.com/gusanthon/pywdf) if you are interested in using the Python wave digital filter framework that was developed for this project. 
+
 Paper: https://zenodo.org/record/7116075
 
 Based on Jatin Chowdhury's C++ wdf library: https://github.com/jatinchowdhury18/WaveDigitalFilters
